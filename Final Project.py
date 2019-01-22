@@ -46,9 +46,24 @@ def get_covariance_matrix(q, qt):
     return C
 
 
+
+def get_eigenvalues_and_vectors(C):
+    eigenvalues, eigenvctrs = numpy.linalg.eig(C)
+    sorted_eigenvalues = sorted(eigenvalues)
+    return_vectors = []
+    return_values = []
+    for i in range(6):
+        eigenvalue = sorted_eigenvalues[len(eigenvalues) - i - 1]
+        for j in range(len(eigenvalues)):
+            if eigenvalues[j] == eigenvalue:
+                return_vectors.append(eigenvctrs[j])
+                return_values.append(eigenvalue)
+    return return_values, return_vectors
+
+
 data_set = open_files()
 average_matrix = get_average(data_set)
 subtract_matrix = get_subtract_matrix(data_set, average_matrix)
 transposed_subtract_matrix = get_transposed_subtract_matrix(subtract_matrix)
 covariance_matrix = get_covariance_matrix(subtract_matrix, transposed_subtract_matrix)
-
+eigenvalues, eigenvectors = get_eigenvalues_and_vectors(covariance_matrix)
