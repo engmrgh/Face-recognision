@@ -4,6 +4,7 @@ import numpy as numpy
 
 IMAGE_WIDTH = 320
 IMAGE_HEIGHT = 243
+SIZE = 243
 
 
 def open_files():
@@ -22,7 +23,32 @@ def get_average(data_set):
     return psi
 
 
+def get_subtract_matrix(dataset,psi):
+    Q = []
+    for image in data_set:
+        Q.append(numpy.subtract(image,psi))
+    return Q
+
+
+
+def get_transposed_subtract_matrix(subtract_matrix):
+    QT = []
+    for image in subtract_matrix:
+        QT.append(image.transpose())
+    return QT
+
+
+def get_covariance_matrix(q, qt):
+    C = [[0 for i in range(SIZE)] for j in range(SIZE)]
+    for image, imageT in zip(q, qt):
+        C = numpy.add(numpy.matmul(image, imageT), C)
+    C = (1/len(q)) * C
+    return C
+
+
 data_set = open_files()
 average_matrix = get_average(data_set)
-
+subtract_matrix = get_subtract_matrix(data_set, average_matrix)
+transposed_subtract_matrix = get_transposed_subtract_matrix(subtract_matrix)
+covariance_matrix = get_covariance_matrix(subtract_matrix, transposed_subtract_matrix)
 
