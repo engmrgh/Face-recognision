@@ -32,10 +32,10 @@ def save_average_matrix(psi):
     img.save("./Constructed Photos/Section 1/Psi/Psi.png")
 
 
-def get_subtract_matrix(dataset,psi):
+def get_subtract_matrix(dataset, psi):
     Q = []
-    for image in data_set:
-        Q.append(numpy.subtract(image,psi))
+    for image in dataset:
+        Q.append(image - psi)
     return Q
 
 
@@ -103,6 +103,7 @@ def calculate_f(eigenvctrs,Q):
 
 data_set = open_files()
 average_matrix = get_average(data_set)
+print(average_matrix)
 save_average_matrix(average_matrix)
 subtract_matrix = get_subtract_matrix(data_set, average_matrix)
 save_subtract_matrix(subtract_matrix)
@@ -111,7 +112,23 @@ save_transposed_subtract_matrix(transposed_subtract_matrix)
 covariance_matrix = get_covariance_matrix(subtract_matrix, transposed_subtract_matrix)
 save_covariance_matrix(covariance_matrix)
 eigenvalues, eigenvectors = get_eigenvalues_and_vectors(covariance_matrix)
-matrix_F = calculate_f(eigenvectors,subtract_matrix)
-print(matrix_F)
+matrix_F = calculate_f(eigenvectors, subtract_matrix)
+
+
+#Section 2 SVD Compression
+data_path = "./yalefaces/subject05.centerlight.gif"
+save_path = "./Constructed Photos/Section 2/SVD Compression/"
+image = numpy.asarray(Image.open(data_path))
+U, sigma, VT = numpy.linalg.svd(image)
+for i in range(5, 130, 25):
+    tmp_sigma = numpy.zeros((IMAGE_HEIGHT, IMAGE_WIDTH))
+    for j in range(i):
+        tmp_sigma[j][j] = sigma[j]
+    compressed = numpy.matmul(numpy.matmul(U, tmp_sigma), VT)
+    img = Image.fromarray(compressed)
+    if img.mode != 'L':
+        img = img.convert('L')
+    img.save(save_path + str(i) + ".png")
+
 
 
