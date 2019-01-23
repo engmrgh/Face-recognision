@@ -5,6 +5,8 @@ import numpy as numpy
 IMAGE_WIDTH = 320
 IMAGE_HEIGHT = 243
 SIZE = 243
+NUMBER_OF_EIGENVECTORS = 6
+NUMBER_OF_IMAGES = 165
 
 
 def open_files():
@@ -61,9 +63,22 @@ def get_eigenvalues_and_vectors(C):
     return return_values, return_vectors
 
 
+def calculate_f(eigenvctrs,Q):
+    F = []
+    for i in range(NUMBER_OF_EIGENVECTORS):
+        result = 0
+        for k in range(NUMBER_OF_IMAGES):
+            result += eigenvectors[i][k] * Q[k]
+        F.append(result)
+    return F
+
+
 data_set = open_files()
 average_matrix = get_average(data_set)
 subtract_matrix = get_subtract_matrix(data_set, average_matrix)
 transposed_subtract_matrix = get_transposed_subtract_matrix(subtract_matrix)
 covariance_matrix = get_covariance_matrix(subtract_matrix, transposed_subtract_matrix)
 eigenvalues, eigenvectors = get_eigenvalues_and_vectors(covariance_matrix)
+matrix_F = calculate_f(eigenvectors,subtract_matrix)
+
+
