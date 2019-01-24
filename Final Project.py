@@ -9,7 +9,8 @@ SIZE = 243
 NUMBER_OF_EIGENVECTORS = 6
 NUMBER_OF_IMAGES = 165
 
-#Section 1
+
+# Section 1
 def open_files():
     file_path = "./yalefaces/"
     images = []
@@ -22,7 +23,7 @@ def get_average(data_set):
     psi = numpy.zeros((IMAGE_HEIGHT, IMAGE_WIDTH))
     for image in data_set:
         psi = numpy.add(psi, image)
-    psi = (1/len(data_set))*psi
+    psi = (1 / len(data_set)) * psi
     return psi
 
 
@@ -67,7 +68,7 @@ def get_covariance_matrix(q, qt):
     C = [[0 for i in range(SIZE)] for j in range(SIZE)]
     for image, imageT in zip(q, qt):
         C = numpy.add(numpy.matmul(image, imageT), C)
-    C = (1/len(q)) * C
+    C = (1 / len(q)) * C
     return C
 
 
@@ -92,7 +93,7 @@ def get_eigenvalues_and_vectors(C):
     return return_values, return_vectors
 
 
-def calculate_f(eigenvctrs,Q):
+def calculate_f(eigenvctrs, Q):
     F = []
     for i in range(NUMBER_OF_EIGENVECTORS):
         result = 0
@@ -101,7 +102,33 @@ def calculate_f(eigenvctrs,Q):
         F.append(result)
     return F
 
-#code place
+
+def save_matrix_F(F):
+    for f, i in zip(F, range(len(F))):
+        img = Image.fromarray(f)
+        if img.mode != 'L':
+            img = img.convert('L')
+        img.save("./Constructed Photos/Section 1/eigen faces/" + str(i) + ".png")
+
+
+def analyze_data_base(F):
+    data_base_path = "./Data/training data/"
+    base_matrix = numpy.zeros((IMAGE_WIDTH * IMAGE_HEIGHT, 1))
+    for file in listdir(data_base_path):
+        tmp = numpy.asarray(Image.open(data_base_path + file)).flatten()
+        base_matrix = numpy.column_stack((base_matrix, tmp))
+    base_matrix = base_matrix[:, 1:]
+    number_of_faces_not_detected = 0
+    for file in listdir(data_base_path):
+        sample = numpy.asarray(Image.open(data_base_path + file)).flatten()
+        try:
+            numpy.linalg.solve(base_matrix, sample)
+        except:
+            number_of_faces_not_detected += 1
+    print(str(number_of_faces_not_detected / NUMBER_OF_IMAGES))
+
+
+# code place
 data_set = open_files()
 average_matrix = get_average(data_set)
 save_average_matrix(average_matrix)
@@ -113,9 +140,12 @@ covariance_matrix = get_covariance_matrix(subtract_matrix, transposed_subtract_m
 save_covariance_matrix(covariance_matrix)
 eigenvalues, eigenvectors = get_eigenvalues_and_vectors(covariance_matrix)
 matrix_F = calculate_f(eigenvectors, subtract_matrix)
+save_matrix_F(matrix_F)
+analyze_data_base(matrix_F)
+
+# Section 2 SVD Compression
 
 
-#Section 2 SVD Compression
 data_path = "./yalefaces/subject05.centerlight.gif"
 save_path = "./Constructed Photos/Section 2/SVD Compression/"
 image = numpy.asarray(Image.open(data_path))
@@ -135,7 +165,7 @@ for i in range(5, 130, 25):
 
 
 def get_matrix_X():
-    training_data_path = "./training data/"
+    training_data_path = "./Data/training data/"
     X = []
     for file in listdir(training_data_path):
         X.append(numpy.asarray(Image.open(training_data_path + file)))
@@ -153,7 +183,7 @@ def calculate_mean_image_and_store_it(X):
     mean_img = numpy.zeros((IMAGE_HEIGHT, IMAGE_WIDTH))
     for matrix in X:
         mean_img = mean_img + matrix
-    mean_img = (1/len(X)) * mean_img
+    mean_img = (1 / len(X)) * mean_img
     return mean_img
 
 
@@ -173,7 +203,7 @@ def save_subtracted_from_mean_matrix(subtracted_matrix):
 
 
 def get_matrix_s():
-    training_data_path = "./training data/"
+    training_data_path = "./Data/training data/"
     S = numpy.zeros((IMAGE_WIDTH * IMAGE_HEIGHT, 1))
     for file in listdir(training_data_path):
         tmp = numpy.asarray(Image.open(training_data_path + file)).flatten()
@@ -184,9 +214,10 @@ def get_matrix_s():
 def get_matrix_F_bar(S):
     S_2 = []
     for f in S.transpose():
-        tmp = (1/len(S.transpose())) * f
+        tmp = (1 / len(S.transpose())) * f
         S_2.append(tmp)
-    f_bar2 = S_2[0] + S_2[1] + S_2[2] + S_2[3] + S_2[4] + S_2[5] + S_2[6] + S_2[7] + S_2[8] + S_2[9] + S_2[10] + S_2[11] + S_2[12] + S_2[13] + S_2[14] + S_2[15] + S_2[16]
+    f_bar2 = S_2[0] + S_2[1] + S_2[2] + S_2[3] + S_2[4] + S_2[5] + S_2[6] + S_2[7] + S_2[8] + S_2[9] + S_2[10] + S_2[
+        11] + S_2[12] + S_2[13] + S_2[14] + S_2[15] + S_2[16]
     return f_bar2
 
 
@@ -217,23 +248,24 @@ def save_eigen_image(img, i):
 
 def draw_image_approximation(A):
     U, sigma, VT = linalg.svds(A)
+    eigenfaces = []
     for m in range(len(U[0])):
         col = U[:, m]
         col = col.reshape(IMAGE_HEIGHT, IMAGE_WIDTH)
         save_eigen_image(col, m)
     for i in range(1, len(sigma)):
-        new_U = (U.transpose()[0:i]).transpose()
+        new_U = U[0:i]
         new_VT = VT[:i]
         new_sigma = numpy.zeros((new_U.shape[1], new_VT.shape[0]))
         for j in range(i):
             tmp_sigma[j][j] = sigma[j]
         new_A = numpy.matmul(numpy.matmul(new_U, new_sigma), new_VT)
-        print(new_A.shape)
         save_new_A(new_A, i)
 
 
 matrix_X = get_matrix_X()
 matrix_mean_img = calculate_mean_image_and_store_it(matrix_X)
+print(matrix_mean_img)
 save_mean_img(matrix_mean_img)
 subtracted_from_mean_matrix = get_subtract_from_mean_matrix(matrix_X, matrix_mean_img)
 save_subtracted_from_mean_matrix(subtracted_from_mean_matrix)
@@ -241,5 +273,4 @@ matrix_S = get_matrix_s()
 matrix_F_bar = get_matrix_F_bar(matrix_S)
 matrix_A = get_matrix_A(matrix_F_bar, matrix_S)
 draw_image_approximation(matrix_A)
-
-
+# solve_for_data_set()
