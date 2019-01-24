@@ -1,7 +1,7 @@
 from os import listdir
 from PIL import Image
 import numpy as numpy
-from sys import getsizeof
+from scipy.sparse import linalg
 
 IMAGE_WIDTH = 320
 IMAGE_HEIGHT = 243
@@ -178,24 +178,58 @@ def get_matrix_s():
     for file in listdir(training_data_path):
         tmp = numpy.asarray(Image.open(training_data_path + file)).flatten()
         S = numpy.column_stack((S, tmp))
-    return S
+    return S[:, 1:]
 
 
 def get_matrix_F_bar(S):
-    f_bar = numpy.zeros((IMAGE_WIDTH * IMAGE_HEIGHT, 1))
     S_2 = []
     for f in S.transpose():
-        tmp = (1/len(S)) * f
+        tmp = (1/len(S.transpose())) * f
         S_2.append(tmp)
-    f_bar = S_2[0] + S_2[1] + S_2[2] + S_2[3] + S_2[4] + S_2[5] + S_2[6] + S_2[7] + S_2[8] + S_2[9] + S_2[10] + S_2[11] + S_2[12] + S_2[13] + S_2[14] + S_2[15] + S_2[16]
-    return f_bar
+    f_bar2 = S_2[0] + S_2[1] + S_2[2] + S_2[3] + S_2[4] + S_2[5] + S_2[6] + S_2[7] + S_2[8] + S_2[9] + S_2[10] + S_2[11] + S_2[12] + S_2[13] + S_2[14] + S_2[15] + S_2[16]
+    return f_bar2
 
 
 def get_matrix_A(f_bar, S):
-    A = []
+    A = numpy.zeros((IMAGE_WIDTH * IMAGE_HEIGHT, 1))
     for f in S.transpose():
-        A.append(f - f_bar)
-    return A
+        A = numpy.column_stack((A, f - f_bar))
+    return A[:, 1:]
+
+
+def save_new_A(new_A, i):
+    imge = Image.fromarray(new_A)
+    if imge.mode != 'L':
+        imge = imge.convert('L')
+    imge.save("./Constructed Photos/Section 5/new A/" + str(i) + ".png")
+
+
+def column(matrix, i):
+    return [row[i] for row in matrix]
+
+
+def save_eigen_image(img, i):
+    imge = Image.fromarray(img)
+    if imge.mode != 'L':
+        imge = imge.convert('L')
+    imge.save("./Constructed Photos/Section 5/eigen images/" + str(i) + ".png")
+
+
+def draw_image_approximation(A):
+    U, sigma, VT = linalg.svds(A)
+    for m in range(len(U[0])):
+        col = U[:, m]
+        col = col.reshape(IMAGE_HEIGHT, IMAGE_WIDTH)
+        save_eigen_image(col, m)
+    for i in range(1, len(sigma)):
+        new_U = (U.transpose()[0:i]).transpose()
+        new_VT = VT[:i]
+        new_sigma = numpy.zeros((new_U.shape[1], new_VT.shape[0]))
+        for j in range(i):
+            tmp_sigma[j][j] = sigma[j]
+        new_A = numpy.matmul(numpy.matmul(new_U, new_sigma), new_VT)
+        print(new_A.shape)
+        save_new_A(new_A, i)
 
 
 matrix_X = get_matrix_X()
@@ -206,3 +240,6 @@ save_subtracted_from_mean_matrix(subtracted_from_mean_matrix)
 matrix_S = get_matrix_s()
 matrix_F_bar = get_matrix_F_bar(matrix_S)
 matrix_A = get_matrix_A(matrix_F_bar, matrix_S)
+draw_image_approximation(matrix_A)
+
+
