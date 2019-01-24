@@ -1,6 +1,7 @@
 from os import listdir
 from PIL import Image
 import numpy as numpy
+from sys import getsizeof
 
 IMAGE_WIDTH = 320
 IMAGE_HEIGHT = 243
@@ -8,7 +9,7 @@ SIZE = 243
 NUMBER_OF_EIGENVECTORS = 6
 NUMBER_OF_IMAGES = 165
 
-
+#Section 1
 def open_files():
     file_path = "./yalefaces/"
     images = []
@@ -18,7 +19,7 @@ def open_files():
 
 
 def get_average(data_set):
-    psi = [[0 for i in range(IMAGE_WIDTH)] for j in range(IMAGE_HEIGHT)]
+    psi = numpy.zeros((IMAGE_HEIGHT, IMAGE_WIDTH))
     for image in data_set:
         psi = numpy.add(psi, image)
     psi = (1/len(data_set))*psi
@@ -100,10 +101,9 @@ def calculate_f(eigenvctrs,Q):
         F.append(result)
     return F
 
-
+#code place
 data_set = open_files()
 average_matrix = get_average(data_set)
-print(average_matrix)
 save_average_matrix(average_matrix)
 subtract_matrix = get_subtract_matrix(data_set, average_matrix)
 save_subtract_matrix(subtract_matrix)
@@ -131,4 +131,28 @@ for i in range(5, 130, 25):
     img.save(save_path + str(i) + ".png")
 
 
+# Section 3 Face recognition with SVD
+
+
+def get_matrix_s():
+    training_data_path = "./training data/"
+    S = []
+    for file in listdir(training_data_path):
+        a = numpy.asarray(Image.open(training_data_path + file)).flatten()
+        S.append(a)
+    return S
+
+
+def get_matrix_F_bar(S):
+    f_bar = numpy.zeros((IMAGE_WIDTH * IMAGE_HEIGHT, 1))
+    S_2 = []
+    for f in S:
+        tmp = (1/len(S)) * f
+        S_2.append(tmp)
+    f_bar = S_2[0] + S_2[1] + S_2[2] + S_2[3] + S_2[4] + S_2[5]
+    return f_bar
+
+
+matrix_S = get_matrix_s()
+matrix_F_bar = get_matrix_F_bar(matrix_S)
 
